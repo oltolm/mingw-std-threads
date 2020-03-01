@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.10)
 project(stdthreadtest)
-cmake_minimum_required(VERSION 3.0)
 
 string(CONCAT mingw_stdthreads_tests_compile_options_docstring
        "Compiler flags used to compile mingw-stdthreads's tests. By default "

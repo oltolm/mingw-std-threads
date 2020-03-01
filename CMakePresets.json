@@ -1,0 +1,16 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "gcc",
+            "generator": "Ninja",
+            "binaryDir": "build-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "MINGW_STDTHREADS_BUILD_TEST": "ON",
+                "MINGW_STDTHREADS_GENERATE_STDHEADERS": "ON",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        }
+    ]
+}
