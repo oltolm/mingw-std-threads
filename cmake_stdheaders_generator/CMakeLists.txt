@@ -1,14 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
-project(cmake_stdheaders_generator)
-
-set(output_include_path "${PROJECT_BINARY_DIR}/${PROJECT_NAME}")
-message("${PROJECT_NAME}: output_include_path set to ${output_include_path}")
 
 function(generate_mingw_stdthreads_header header_file_name 
                                           mingw_stdthreads_folder)
-    set(template_file_path "${PROJECT_SOURCE_DIR}/template.cpp")
-    set(destination_file_path "${output_include_path}/${header_file_name}")
-
     # Check if compiler is gcc or clang
     if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         # Actually this should never happen because it should have already
@@ -20,7 +13,7 @@ function(generate_mingw_stdthreads_header header_file_name
     # The -H option will let g++ outputs header dependencies to stderr, and the
     # content of stderr is saved to variable compiler_output.
     try_compile(unused_compiler_exit_code ${CMAKE_CURRENT_BINARY_DIR}
-        "${template_file_path}"
+        "${PROJECT_SOURCE_DIR}/cmake_stdheaders_generator/template.cpp"
         COMPILE_DEFINITIONS
             -H "-DMINGW_STDTHREADS_DETECTING_SYSTEM_HEADER=<${header_file_name}>"
         OUTPUT_VARIABLE compiler_output)
@@ -36,6 +29,7 @@ function(generate_mingw_stdthreads_header header_file_name
                             "compiler output was:\n${compiler_output}")
     endif()
 
+    get_filename_component(header_file_name "${header_file_name}" NAME_WE)
     # Get full path to mingw-stdthreads header
     set(mingw_stdthreads_headers_generator_library_header
         "${mingw_stdthreads_folder}/mingw.${header_file_name}.h")
@@ -46,7 +40,7 @@ function(generate_mingw_stdthreads_header header_file_name
     file(TO_CMAKE_PATH "${mingw_stdthreads_headers_generator_library_header}"
         mingw_stdthreads_headers_generator_library_header)
 
-    configure_file("${template_file_path}" "${destination_file_path}")
+    configure_file("${PROJECT_SOURCE_DIR}/cmake_stdheaders_generator/template.cpp" "${PROJECT_BINARY_DIR}/include/${header_file_name}.h")
 endfunction()
 
 if(EXISTS "${MINGW_STDTHREADS_DIR}")
@@ -67,10 +61,11 @@ generate_mingw_stdthreads_header(mutex "${MINGW_STDTHREADS_DIR}")
 generate_mingw_stdthreads_header(shared_mutex "${MINGW_STDTHREADS_DIR}")
 # <thread>
 generate_mingw_stdthreads_header(thread "${MINGW_STDTHREADS_DIR}")
+# <bits/c++config.h>
+generate_mingw_stdthreads_header(bits/c++config.h "${MINGW_STDTHREADS_DIR}")
 
 # the generated headers are to be considered as a header only library
 # so we create an interface target
-add_library(${PROJECT_NAME} INTERFACE)
 target_compile_definitions(${PROJECT_NAME} INTERFACE 
                            MINGW_STDTHREADS_GENERATED_STDHEADERS)
-target_include_directories(${PROJECT_NAME} INTERFACE "${output_include_path}")
+target_include_directories(${PROJECT_NAME} INTERFACE "${PROJECT_BINARY_DIR}/include")

@@ -20,8 +20,6 @@ if(MINGW_STDTHREADS_GENERATE_STDHEADERS)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         # Add as dependency and generate std headers
         add_subdirectory(cmake_stdheaders_generator)
-        target_link_libraries(${PROJECT_NAME} INTERFACE 
-                              cmake_stdheaders_generator)
     else()
         message(WARNING "Cannot generate std headers with this compiler: "
                         ${CMAKE_CXX_COMPILER_ID} ". "
