@@ -302,9 +302,6 @@ public:
     }
 };
 
-#if __cplusplus >= 201402L
-using std::shared_lock;
-#else
 //    If not supplied by shared_mutex (eg. because C++14 is not supported), I
 //  supply the various helper classes that the header should have defined.
 template<class Mutex>
@@ -474,7 +471,6 @@ void swap( shared_lock<Mutex>& lhs, shared_lock<Mutex>& rhs ) noexcept
 {
     lhs.swap(rhs);
 }
-#endif  //  C++11
 } //  Namespace mingw_stdthread
 
 namespace std
@@ -489,7 +485,6 @@ using mingw_stdthread::shared_mutex;
 #endif
 #if (__cplusplus < 201402L) || (defined(__MINGW32__ ) && !defined(_GLIBCXX_HAS_GTHREADS))
 using mingw_stdthread::shared_timed_mutex;
-using mingw_stdthread::shared_lock;
 #elif !defined(MINGW_STDTHREAD_REDUNDANCY_WARNING)  //  Skip repetition
 #define MINGW_STDTHREAD_REDUNDANCY_WARNING
 #pragma message "This version of MinGW seems to include a win32 port of\
