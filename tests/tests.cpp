@@ -23,9 +23,11 @@
 #endif
 #include <atomic>
 #include <cassert>
-#include <string>
+#include <cstring>
 #include <iostream>
+#include <string>
 #include <typeinfo>
+#include <vector>
 
 using namespace std;
 
