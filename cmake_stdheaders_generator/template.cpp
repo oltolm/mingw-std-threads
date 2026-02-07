@@ -6,6 +6,8 @@
     // both system header and mignw-stdthreads header should already have include
     // guards. But we still add a #pragma once just to be safe.
     
+#if @mingw_stdthreads_headers_generator_include_system_header@
     #include "${mingw_stdthreads_headers_generator_system_header}"
+#endif
     #include "${mingw_stdthreads_headers_generator_library_header}"
 #endif

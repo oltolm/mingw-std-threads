@@ -330,7 +330,7 @@ public:
     }
 
     shared_lock (shared_lock<Mutex> && other) noexcept
-        : mMutex(other.mutex_), mOwns(other.owns_)
+        : mMutex(other.mMutex), mOwns(other.mOwns)
     {
         other.mMutex = nullptr;
         other.mOwns = false;

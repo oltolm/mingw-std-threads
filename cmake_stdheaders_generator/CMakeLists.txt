@@ -40,6 +40,11 @@ function(generate_mingw_stdthreads_header header_file_name
     file(TO_CMAKE_PATH "${mingw_stdthreads_headers_generator_library_header}"
         mingw_stdthreads_headers_generator_library_header)
 
+    set(mingw_stdthreads_headers_generator_include_system_header 1)
+    if(header_file_name STREQUAL "thread" OR header_file_name STREQUAL "future")
+        set(mingw_stdthreads_headers_generator_include_system_header 0)
+    endif()
+
     configure_file("${PROJECT_SOURCE_DIR}/cmake_stdheaders_generator/template.cpp" "${PROJECT_BINARY_DIR}/include/${header_file_name}")
 endfunction()
 

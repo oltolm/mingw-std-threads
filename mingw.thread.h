@@ -24,8 +24,12 @@
 #error A C++11 compiler is required!
 #endif
 
-//  Use the standard classes for std::, if available.
+//  On recent libstdc++ versions, <thread> still declares a placeholder
+//  std::thread even when gthreads support is unavailable. Avoid including it
+//  in that fallback configuration so this header can provide the replacement.
+#if !(defined(__MINGW32__) && !defined(_GLIBCXX_HAS_GTHREADS))
 #include <thread>
+#endif
 
 #include <cstddef>      //  For std::size_t
 #include <cerrno>       //  Detect error type.
@@ -327,9 +331,9 @@ namespace std
 //    Take the safe option, and include only in the presence of MinGW's win32
 //  implementation.
 #if defined(__MINGW32__ ) && !defined(_GLIBCXX_HAS_GTHREADS)
+//    Override libstdc++'s placeholder std::thread with the Win32-backed
+//  implementation from this library when gthreads support is unavailable.
 using mingw_stdthread::thread;
-//    Remove ambiguity immediately, to avoid problems arising from the above.
-//using std::thread;
 namespace this_thread
 {
 using namespace mingw_stdthread::this_thread;

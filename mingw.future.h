@@ -19,14 +19,18 @@
 #error The MinGW STD Threads library requires a compiler supporting C++11.
 #endif
 
-#include <future>
-
 #include <cassert>
+#include <stdexcept>
+#include <system_error>
 #include <vector>
 #include <utility>        //  For std::pair
 #include <type_traits>
 #include <memory>
 #include <functional>     //  For std::hash
+
+#if !(defined(__MINGW32__) && !defined(_GLIBCXX_HAS_GTHREADS))
+#include <future>
+#endif
 
 #include "mingw.thread.h" //  Start new threads, and use invoke.
 
@@ -49,6 +53,125 @@
 //    std::shared_ptr is the natural choice for this. However, a custom
 //  implementation removes the need to keep a control block separate from the
 //  class itself (no need to support weak pointers).
+
+#if (defined(__MINGW32__) && !defined(_GLIBCXX_HAS_GTHREADS))
+namespace std
+{
+enum class future_errc
+{
+  future_already_retrieved = 1,
+  promise_already_satisfied,
+  no_state,
+  broken_promise
+};
+
+template<>
+struct is_error_code_enum<future_errc> : true_type { };
+
+inline error_category const & future_category () noexcept
+{
+  return generic_category();
+}
+
+inline error_code make_error_code (future_errc errc) noexcept
+{
+  return error_code(static_cast<int>(errc), future_category());
+}
+
+inline error_condition make_error_condition (future_errc errc) noexcept
+{
+  return error_condition(static_cast<int>(errc), future_category());
+}
+
+class future_error : public logic_error
+{
+public:
+  explicit future_error (future_errc errc)
+    : logic_error("std::future_error: " + make_error_code(errc).message()),
+      mCode(make_error_code(errc))
+  {
+  }
+
+  explicit future_error (error_code ec)
+    : logic_error("std::future_error: " + ec.message()),
+      mCode(ec)
+  {
+  }
+
+  error_code const & code () const noexcept
+  {
+    return mCode;
+  }
+
+private:
+  error_code mCode;
+};
+
+template<typename _Res>
+class future;
+
+template<typename _Res>
+class shared_future;
+
+template<typename _Res>
+class promise;
+
+enum class launch
+{
+  async = 1,
+  deferred = 2
+};
+
+constexpr launch operator& (launch lhs, launch rhs) noexcept
+{
+  return static_cast<launch>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+constexpr launch operator| (launch lhs, launch rhs) noexcept
+{
+  return static_cast<launch>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+constexpr launch operator^ (launch lhs, launch rhs) noexcept
+{
+  return static_cast<launch>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
+constexpr launch operator~ (launch value) noexcept
+{
+  return static_cast<launch>(~static_cast<int>(value));
+}
+
+inline launch & operator&= (launch & lhs, launch rhs) noexcept
+{
+  lhs = lhs & rhs;
+  return lhs;
+}
+
+inline launch & operator|= (launch & lhs, launch rhs) noexcept
+{
+  lhs = lhs | rhs;
+  return lhs;
+}
+
+inline launch & operator^= (launch & lhs, launch rhs) noexcept
+{
+  lhs = lhs ^ rhs;
+  return lhs;
+}
+
+enum class future_status
+{
+  ready,
+  timeout,
+  deferred
+};
+
+template<typename _Fn, typename... _Args>
+using __async_result_of = typename result_of<
+  typename decay<_Fn>::type(typename decay<_Args>::type...)>::type;
+} // Namespace std
+#endif
 
 namespace mingw_stdthread
 {
@@ -420,7 +543,7 @@ class future : mingw_stdthread::detail::FutureBase
 };
 
 template<class T>
-class shared_future : future<T>
+class shared_future : public future<T>
 {
   typedef typename future<T>::state_type state_type;
  public:
